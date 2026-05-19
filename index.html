@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-cms="site_title">Грузовоз — Доставка сыпучих материалов</title>
+  <meta name="description" content="Доставка песка, щебня, грунта самосвалами 6 м³ по Южно-Сахалинску и области.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+</head>
+<body>
+
+  <!-- Loader -->
+  <div class="cms-loading" id="cms-loader">
+    <div class="cms-loading-spinner"></div>
+    <div>Загрузка...</div>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container header-inner">
+      <a href="#" class="logo">
+        <span class="logo-icon">🚛</span>
+        <span id="cms-site_title">Грузовоз</span>
+      </a>
+      <nav class="nav">
+        <a href="#materials">Материалы</a>
+        <a href="#calculator">Калькулятор</a>
+        <a href="#fleet">Автопарк</a>
+        <a href="#gallery">Фото</a>
+        <a href="#contacts">Контакты</a>
+      </nav>
+      <div class="header-phone">
+        <a href="tel:" id="cms-phone-link" class="phone">+7 (999) 123-45-67</a>
+        <span id="cms-work_hours">24/7</span>
+      </div>
+      <button class="mobile-toggle" id="mobileToggle">☰</button>
+    </div>
+  </header>
+
+  <!-- Hero + Calculator -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-text">
+        <h1 id="cms-hero_title">Загрузка...</h1>
+        <p id="cms-hero_subtitle"></p>
+        <div class="badges">
+          <span class="badge">⚡ От 2 часов</span>
+          <span class="badge" id="cms-price_badge">💰 От 4 500 ₽</span>
+          <span class="badge">📍 По области</span>
+        </div>
+      </div>
+
+      <div class="calc-card" id="calculator">
+        <h2>🧮 Рассчитать стоимость</h2>
+        
+        <div class="form-group">
+          <label>Материал</label>
+          <select id="material">
+            <option value="">Выберите</option>
+            <option value="pesok">Песок речной</option>
+            <option value="sheben">Щебень гранитный</option>
+            <option value="grunt">Грунт плодородный</option>
+            <option value="torf">Торф</option>
+            <option value="beton">Бетонные смеси</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Расстояние (км)</label>
+            <input type="number" id="distance" min="1" max="300" value="10">
+          </div>
+          <div class="form-group">
+            <label>Рейсов</label>
+            <input type="number" id="quantity" min="1" max="20" value="1">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Или шкала</label>
+          <input type="range" id="distance-range" min="1" max="150" value="10">
+          <div class="range-val" id="range-val">10 км</div>
+        </div>
+
+        <button class="btn btn-primary" onclick="recalc()">Рассчитать</button>
+
+        <div class="result" id="result" style="display:none">
+          <div class="price" id="total-price">0 ₽</div>
+          <div class="detail" id="result-detail"></div>
+          <button class="btn btn-outline" onclick="scrollToOrder()">📝 Заказать по этой цене</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Materials -->
+  <section class="section" id="materials">
+    <div class="container">
+      <h2 id="cms-materials_title">Популярные материалы</h2>
+      <p id="cms-materials_desc" class="section-desc"></p>
+      
+      <div class="materials-grid">
+        <div class="material-card" onclick="selectMaterial('pesok')">
+          <div class="material-img">
+            <img src="assets/img/gallery/pesok.webp" alt="Песок" loading="lazy">
+            <span class="badge-hot">Хит</span>
+          </div>
+          <div class="material-info">
+            <h3>Песок речной</h3>
+            <p id="cms-pesok_desc">Чистый речной песок для строительства</p>
+            <div class="material-price" id="cms-pesok_price">от 4 500 ₽</div>
+          </div>
+        </div>
+
+        <div class="material-card" onclick="selectMaterial('sheben')">
+          <div class="material-img">
+            <img src="assets/img/gallery/sheben.webp" alt="Щебень" loading="lazy">
+          </div>
+          <div class="material-info">
+            <h3>Щебень гранитный</h3>
+            <p id="cms-sheben_desc">Фракции 5-20, 20-40 для дорог</p>
+            <div class="material-price" id="cms-sheben_price">от 5 200 ₽</div>
+          </div>
+        </div>
+
+        <div class="material-card" onclick="selectMaterial('grunt')">
+          <div class="material-img">
+            <img src="assets/img/gallery/grunt.webp" alt="Грунт" loading="lazy">
+          </div>
+          <div class="material-info">
+            <h3>Грунт плодородный</h3>
+            <p id="cms-grunt_desc">Чернозём для озеленения</p>
+            <div class="material-price" id="cms-grunt_price">от 3 800 ₽</div>
+          </div>
+        </div>
+
+        <div class="material-card" onclick="selectMaterial('torf')">
+          <div class="material-img">
+            <img src="assets/img/gallery/torf.webp" alt="Торф" loading="lazy">
+          </div>
+          <div class="material-info">
+            <h3>Торф</h3>
+            <p id="cms-torf_desc">Для сада и ландшафтного дизайна</p>
+            <div class="material-price" id="cms-torf_price">от 5 500 ₽</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fleet -->
+  <section class="section" id="fleet" data-show="show_fleet">
+    <div class="container">
+      <h2 id="cms-fleet_title">Наш автопарк</h2>
+      <p id="cms-fleet_desc" class="section-desc"></p>
+      
+      <div class="fleet-grid">
+        <div class="fleet-card">
+          <div class="fleet-img">
+            <img src="assets/img/fleet/truck-1.webp" alt="КамАЗ №1" loading="lazy">
+            <span class="fleet-status available">✅ Свободен</span>
+          </div>
+          <div class="fleet-info">
+            <h3 id="cms-truck1_name">КамАЗ 65115 №1</h3>
+            <div class="fleet-specs">
+              <span>📦 6 м³</span>
+              <span>⚖️ 10 т</span>
+              <span>📅 2019</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="fleet-card">
+          <div class="fleet-img">
+            <img src="assets/img/fleet/truck-2.webp" alt="КамАЗ №2" loading="lazy">
+            <span class="fleet-status available">✅ Свободен</span>
+          </div>
+          <div class="fleet-info">
+            <h3 id="cms-truck2_name">КамАЗ 65115 №2</h3>
+            <div class="fleet-specs">
+              <span>📦 6 м³</span>
+              <span>⚖️ 10 т</span>
+              <span>📅 2020</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="fleet-card">
+          <div class="fleet-img">
+            <img src="assets/img/fleet/truck-3.webp" alt="КамАЗ №3" loading="lazy">
+            <span class="fleet-status busy">🔄 В рейсе</span>
+          </div>
+          <div class="fleet-info">
+            <h3 id="cms-truck3_name">КамАЗ 65115 №3</h3>
+            <div class="fleet-specs">
+              <span>📦 6 м³</span>
+              <span>⚖️ 10 т</span>
+              <span>📅 2018</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="fleet-card">
+          <div class="fleet-img">
+            <img src="assets/img/fleet/truck-4.webp" alt="КамАЗ №4" loading="lazy">
+            <span class="fleet-status available">✅ Свободен</span>
+          </div>
+          <div class="fleet-info">
+            <h3 id="cms-truck4_name">КамАЗ 65115 №4</h3>
+            <div class="fleet-specs">
+              <span>📦 6 м³</span>
+              <span>⚖️ 10 т</span>
+              <span>📅 2021</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section class="section" id="gallery" data-show="show_gallery">
+    <div class="container">
+      <h2 id="cms-gallery_title">Фото с объектов</h2>
+      <p id="cms-gallery_desc" class="section-desc"></p>
+      
+      <div class="gallery-grid">
+        <div class="gallery-item" onclick="openModal(this)">
+          <img src="assets/img/gallery/work-1.webp" alt="Работа 1" loading="lazy">
+          <div class="gallery-overlay">🔍</div>
+        </div>
+        <div class="gallery-item" onclick="openModal(this)">
+          <img src="assets/img/gallery/work-2.webp" alt="Работа 2" loading="lazy">
+          <div class="gallery-overlay">🔍</div>
+        </div>
+        <div class="gallery-item" onclick="openModal(this)">
+          <img src="assets/img/gallery/work-3.webp" alt="Работа 3" loading="lazy">
+          <div class="gallery-overlay">🔍</div>
+        </div>
+        <div class="gallery-item" onclick="openModal(this)">
+          <img src="assets/img/gallery/work-4.webp" alt="Работа 4" loading="lazy">
+          <div class="gallery-overlay">🔍</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Order Form -->
+  <section class="section" id="order" data-show="show_order_form">
+    <div class="container">
+      <h2 id="cms-cta_title">Оформить заказ</h2>
+      <p id="cms-cta_desc" class="section-desc"></p>
+      
+      <form id="orderForm" class="order-form" onsubmit="submitOrder(event)">
+        <!-- Honeypot -->
+        <input type="text" name="website" class="honeypot" tabindex="-1" autocomplete="off">
+        
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Имя *</label>
+            <input type="text" name="name" required>
+          </div>
+          <div class="form-group">
+            <label>Телефон *</label>
+            <input type="tel" name="phone" required pattern="[\+]?[0-9\s\-\(\)]{10,}">
+          </div>
+          <div class="form-group">
+            <label>Email (для письма)</label>
+            <input type="email" name="email" placeholder="client@example.com">
+          </div>
+          <div class="form-group">
+            <label>Материал</label>
+            <select name="order_material" id="order-material">
+              <option value="">Выберите</option>
+              <option value="Песок">Песок</option>
+              <option value="Щебень">Щебень</option>
+              <option value="Грунт">Грунт</option>
+              <option value="Торф">Торф</option>
+              <option value="Бетон">Бетон</option>
+            </select>
+          </div>
+          <div class="form-group form-full">
+            <label>Адрес доставки *</label>
+            <input type="text" name="order_address" required>
+          </div>
+          <div class="form-group form-full">
+            <label>Комментарий</label>
+            <textarea name="order_comment" rows="3"></textarea>
+          </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" id="submitBtn">📤 Отправить заявку</button>
+        <p class="note">Нажимая кнопку, вы соглашаетесь с обработкой персональных данных</p>
+      </form>
+      
+      <div class="success" id="formSuccess" style="display:none">
+        <div class="success-icon">✓</div>
+        <h3>Заявка отправлена!</h3>
+        <p>Мы перезвоним в течение 15 минут. Проверьте почту — туда также отправлены детали заказа.</p>
+        <button class="btn btn-outline" onclick="resetForm()">📝 Ещё одна заявка</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Map -->
+  <section class="section" id="map" data-show="show_map">
+    <div class="container">
+      <h2>📍 Зона доставки</h2>
+      <p id="cms-map_desc" class="section-desc"></p>
+      <div id="yandex-map" class="map"></div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" id="contacts">
+    <div class="container">
+      <h2 id="cms-cta_main">Готовы сделать заказ?</h2>
+      <p id="cms-cta_sub">Позвоните прямо сейчас — рассчитаем стоимость и подадим машину</p>
+      <a href="tel:" id="cms-cta_phone" class="cta-phone">+7 (999) 123-45-67</a>
+      <div class="cta-buttons">
+        <a href="https://wa.me/" id="cms-whatsapp_link" class="btn btn-whatsapp" target="_blank">💬 WhatsApp</a>
+        <a href="tel:" id="cms-call_link" class="btn btn-outline-light">📞 Позвонить</a>
+        <button class="btn btn-outline-light" onclick="scrollToOrder()">📝 Заявка</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">🚛 <span id="cms-site_title">Грузовоз</span></div>
+          <p class="footer-desc" id="cms-footer_desc"></p>
+        </div>
+        <div>
+          <h4>Услуги</h4>
+          <ul class="footer-links">
+            <li><a href="#materials">Песок</a></li>
+            <li><a href="#materials">Щебень</a></li>
+            <li><a href="#materials">Грунт</a></li>
+            <li><a href="#materials">Торф</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Инфо</h4>
+          <ul class="footer-links">
+            <li><a href="#calculator">Калькулятор</a></li>
+            <li><a href="#fleet">Автопарк</a></li>
+            <li><a href="#gallery">Фото</a></li>
+            <li><a href="#contacts">Контакты</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Контакты</h4>
+          <ul class="footer-links">
+            <li><a href="tel:" id="cms-footer_phone"></a></li>
+            <li><a href="mailto:" id="cms-footer_email"></a></li>
+            <li id="cms-footer_address"></li>
+            <li id="cms-footer_hours"></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p id="cms-copyright">© 2026 Грузовоз</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Image Modal -->
+  <div class="modal-overlay" id="imageModal" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <img id="modalImg" src="" alt="">
+    </div>
+  </div>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

@@ -3,160 +3,110 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>⚙️ CMS — Грузовоз</title>
+  <title>⚙️ CMS — Самосвал65</title>
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    body { background: #f1f5f9; font-family: 'Inter', system-ui, sans-serif; }
-    .admin-wrapper { max-width: 900px; margin: 40px auto; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden; }
-    .admin-header { background: linear-gradient(135deg, #1a5f2a, #124a1f); color: white; padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; }
-    .admin-header h1 { font-size: 1.4rem; margin: 0; }
-    .admin-header a { color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.9rem; }
+    /* Стили только для админки */
+    body { background: #f1f5f9; font-family: 'Inter', system-ui, sans-serif; margin: 0; }
+    .admin-wrapper { max-width: 960px; margin: 40px auto; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); overflow: hidden; }
+    .admin-header { background: linear-gradient(135deg, #1a5f2a, #124a1f); color: white; padding: 20px 32px; display: flex; justify-content: space-between; align-items: center; }
+    .admin-header h1 { margin: 0; font-size: 1.3rem; font-weight: 600; }
+    .admin-header a { color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
     .admin-header a:hover { text-decoration: underline; }
     .admin-body { padding: 32px; }
+    
     .login-box { text-align: center; padding: 60px 20px; }
-    .login-box input { max-width: 300px; margin: 0 auto 16px; display: block; width: 100%; }
-    .status { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.95rem; }
+    .login-box input { width: 100%; max-width: 300px; margin: 0 auto 16px; display: block; }
+    .login-error { color: #dc2626; font-size: 0.9rem; display: none; margin-top: 8px; }
+    
+    .status { padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-size: 0.95rem; font-weight: 500; }
     .status.ok { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
     .status.err { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-    .data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 20px; }
-    .data-card { background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; }
-    .data-card h4 { margin: 0 0 8px 0; color: #1a5f2a; font-size: 1rem; }
-    .data-card p { margin: 4px 0; font-size: 0.95rem; color: #334155; }
-    .data-card .value { font-weight: 600; color: #111827; }
-    .btn-admin { background: #1a5f2a; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 500; }
-    .btn-admin:hover { background: #124a1f; }
+    .status.info { background: #e0f2fe; color: #075985; border: 1px solid #7dd3fc; }
+    
+    .data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .data-card { background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+    .data-card h4 { margin: 0 0 12px 0; color: #1a5f2a; font-size: 1rem; display: flex; align-items: center; gap: 6px; }
+    .data-card p { margin: 6px 0; font-size: 0.95rem; color: #475569; }
+    .data-card .val { font-weight: 600; color: #111827; }
+    
+    .admin-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-admin { background: #1a5f2a; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: 0.2s; }
+    .btn-admin:hover { background: #124a1f; transform: translateY(-1px); }
+    .btn-link { background: #4285f4; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; transition: 0.2s; }
+    .btn-link:hover { background: #3367d6; transform: translateY(-1px); }
+    .btn-logout { background: #64748b; }
+    .btn-logout:hover { background: #475569; }
+    
     .hidden { display: none !important; }
+    @media (max-width: 600px) {
+      .admin-wrapper { margin: 0; border-radius: 0; }
+      .admin-actions { flex-direction: column; }
+      .btn-admin, .btn-link, .btn-logout { width: 100%; text-align: center; }
+    }
   </style>
 </head>
 <body>
   <div class="admin-wrapper">
-    <div class="admin-header">
-      <h1>⚙️ CMS Панель</h1>
+    <header class="admin-header">
+      <h1>⚙️ Панель управления</h1>
       <a href="index.html" target="_blank">↗ Открыть сайт</a>
-    </div>
-    
-    <div class="admin-body">
-      <!-- Login -->
+    </header>
+
+    <main class="admin-body">
+      <!-- Вход -->
       <div id="loginBox" class="login-box">
-        <h2 style="margin-bottom:24px">🔐 Вход в панель</h2>
-        <input type="password" id="adminPass" placeholder="Введите пароль">
-        <button class="btn-admin" onclick="checkAuth()">Войти</button>
-        <p id="loginError" style="color:#dc2626;margin-top:12px;display:none">Неверный пароль</p>
+        <h2 style="margin-bottom:24px; font-weight:600">🔐 Доступ к настройкам</h2>
+        <input type="password" id="adminPass" placeholder="Введите пароль" autocomplete="off">
+        <button class="btn-admin" id="loginBtn">Войти</button>
+        <p class="login-error" id="loginError">Неверный пароль</p>
       </div>
 
-      <!-- Dashboard -->
+      <!-- Дашборд -->
       <div id="dashboard" class="hidden">
-        <div id="cmsStatus" class="status">Загрузка...</div>
+        <div id="cmsStatus" class="status info">Нажмите "Обновить" для загрузки данных</div>
         
         <div class="data-grid">
           <div class="data-card">
             <h4>📞 Контакты</h4>
-            <p>Телефон: <span class="value" id="adm-phone">—</span></p>
-            <p>WhatsApp: <span class="value" id="adm-wa">—</span></p>
-            <p>Email: <span class="value" id="adm-email">—</span></p>
-            <p>Адрес: <span class="value" id="adm-address">—</span></p>
+            <p>Телефон: <span class="val" id="adm-phone">—</span></p>
+            <p>WhatsApp: <span class="val" id="adm-wa">—</span></p>
+            <p>Email: <span class="val" id="adm-email">—</span></p>
+            <p>Адрес: <span class="val" id="adm-address">—</span></p>
           </div>
           
           <div class="data-card">
-            <h4>💰 Цены (за рейс)</h4>
-            <p>Песок: <span class="value" id="adm-pesok">—</span></p>
-            <p>Щебень: <span class="value" id="adm-sheben">—</span></p>
-            <p>Грунт: <span class="value" id="adm-grunt">—</span></p>
-            <p>Торф: <span class="value" id="adm-torf">—</span></p>
-            <p>Бетон: <span class="value" id="adm-beton">—</span></p>
+            <h4>💰 Цены за рейс</h4>
+            <p>Песок: <span class="val" id="adm-pesok">—</span></p>
+            <p>Щебень: <span class="val" id="adm-sheben">—</span></p>
+            <p>Грунт: <span class="val" id="adm-grunt">—</span></p>
+            <p>Торф: <span class="val" id="adm-torf">—</span></p>
+            <p>Бетон: <span class="val" id="adm-beton">—</span></p>
           </div>
           
           <div class="data-card">
             <h4>🚚 Доставка</h4>
-            <p>База: <span class="value" id="adm-delivery">—</span> ₽</p>
-            <p>Шаг: <span class="value" id="adm-step">—</span> км</p>
-            <p>Радиус: <span class="value" id="adm-radius">—</span> км</p>
+            <p>База: <span class="val" id="adm-delivery">—</span> ₽</p>
+            <p>Шаг: <span class="val" id="adm-step">—</span> км</p>
+            <p>Радиус: <span class="val" id="adm-radius">—</span> км</p>
           </div>
           
           <div class="data-card">
             <h4>🎨 Дизайн</h4>
-            <p>Основной: <span class="value" id="adm-color1">—</span></p>
-            <p>Акцент: <span class="value" id="adm-color2">—</span></p>
+            <p>Основной: <span class="val" id="adm-color1">—</span></p>
+            <p>Акцент: <span class="val" id="adm-color2">—</span></p>
           </div>
         </div>
-        
-        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
-          <button class="btn-admin" onclick="refreshData()">🔄 Обновить</button>
-          <a href="https://docs.google.com/spreadsheets/d/ВАШ_ID" target="_blank" class="btn-admin" style="background:#4285f4;text-decoration:none;display:inline-flex;align-items:center">📊 Открыть таблицу</a>
-          <button class="btn-admin" style="background:#64748b" onclick="logout()">🚪 Выйти</button>
+
+        <div class="admin-actions">
+          <button class="btn-admin" id="refreshBtn">🔄 Обновить данные</button>
+          <a id="sheetLink" href="#" target="_blank" class="btn-link">📊 Открыть таблицу</a>
+          <button class="btn-admin btn-logout" id="logoutBtn">🚪 Выйти</button>
         </div>
       </div>
-    </div>
+    </main>
   </div>
 
-  <script>
-    const CMS_URL = 'https://script.google.com/macros/s/ВАШ_ID/exec';
-    const ADMIN_PASSWORD = 'admin123'; // ← Замените на свой пароль!
-
-    function checkAuth() {
-      const pass = document.getElementById('adminPass').value;
-      if (pass === ADMIN_PASSWORD) {
-        sessionStorage.setItem('admin_auth', '1');
-        showDashboard();
-        loadAdminData();
-      } else {
-        document.getElementById('loginError').style.display = 'block';
-      }
-    }
-
-    function showDashboard() {
-      document.getElementById('loginBox').classList.add('hidden');
-      document.getElementById('dashboard').classList.remove('hidden');
-    }
-
-    function logout() {
-      sessionStorage.removeItem('admin_auth');
-      location.reload();
-    }
-
-    async function loadAdminData() {
-      const status = document.getElementById('cmsStatus');
-      try {
-        const res = await fetch(CMS_URL);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const c = await res.json();
-        
-        // Контакты
-        document.getElementById('adm-phone').textContent = c.phone || '—';
-        document.getElementById('adm-wa').textContent = c.whatsapp_number ? `+${c.whatsapp_number}` : '—';
-        document.getElementById('adm-email').textContent = c.email || '—';
-        document.getElementById('adm-address').textContent = c.address || '—';
-        
-        // Цены
-        ['pesok','sheben','grunt','torf','beton'].forEach(k => {
-          const val = c[`price_${k}`];
-          document.getElementById(`adm-${k}`).textContent = val ? `${val.toLocaleString('ru-RU')} ₽` : '—';
-        });
-        
-        // Доставка
-        document.getElementById('adm-delivery').textContent = c.delivery_price || '—';
-        document.getElementById('adm-step').textContent = c.delivery_step || '—';
-        document.getElementById('adm-radius').textContent = c.delivery_radius || '—';
-        
-        // Дизайн
-        document.getElementById('adm-color1').textContent = c.color_primary || '—';
-        document.getElementById('adm-color2').textContent = c.color_accent || '—';
-        
-        status.className = 'status ok';
-        status.textContent = '✅ Данные загружены: ' + new Date().toLocaleTimeString('ru-RU');
-      } catch (e) {
-        status.className = 'status err';
-        status.textContent = '❌ Ошибка: ' + e.message;
-      }
-    }
-
-    function refreshData() { loadAdminData(); }
-
-    // Авто-вход если уже авторизован
-    if (sessionStorage.getItem('admin_auth') === '1') {
-      showDashboard();
-      loadAdminData();
-    }
-  </script>
+  <script src="assets/js/admin.js"></script>
 </body>
 </html>

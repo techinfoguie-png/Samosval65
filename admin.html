@@ -45,9 +45,11 @@
     </header>
     <main class="admin-body">
       <div id="loginBox" class="login-box">
-        <h2 style="margin-bottom:24px">🔐 Доступ</h2>
-        <input type="password" id="adminPass" placeholder="Пароль">
-        <button class="btn" id="loginBtn">Войти</button>
+        <h2>🔐 Доступ</h2>
+        <form id="loginForm" onsubmit="event.preventDefault(); handleLogin();">
+        <input type="password" id="adminPass" placeholder="Пароль" autocomplete="current-password">
+        <button type="submit" class="btn" id="loginBtn">Войти</button>
+        </form>
         <p id="loginError" style="color:#dc2626;margin-top:10px;display:none">Неверный пароль</p>
       </div>
       <div id="dashboard" class="hidden">

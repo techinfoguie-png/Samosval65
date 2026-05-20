@@ -6,7 +6,6 @@
     CMS_URL: 'https://script.google.com/macros/s/AKfycbzk4T_aLnTlEq-q5v4rGqFWtENTEvSvZ1wqOyKKMLBuh0HG6rwxkbYognua149x9Hze3Q/exec', // ← URL из Apps Script
     PASSWORD: 'admin123', // ← Пароль для входа
     SHEET_URL: 'https://docs.google.com/spreadsheets/d/17bbtzt_kGkVFlWZeVTP0yLvWFT0kies9qEdPTjm66NE/edit' // ← Ссылка на таблицу
-    DEBUG: 'false'       // ← Поставьте true, чтобы войти БЕЗ пароля для теста
   };
 
   document.addEventListener('DOMContentLoaded', function() {

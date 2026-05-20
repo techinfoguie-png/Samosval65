@@ -6,44 +6,35 @@
   <title>⚙️ CMS — Самосвал65</title>
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* Стили только для админки */
     body { background: #f1f5f9; font-family: 'Inter', system-ui, sans-serif; margin: 0; }
-    .admin-wrapper { max-width: 960px; margin: 40px auto; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); overflow: hidden; }
+    .admin-wrapper { max-width: 1100px; margin: 40px auto; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); overflow: hidden; }
     .admin-header { background: linear-gradient(135deg, #1a5f2a, #124a1f); color: white; padding: 20px 32px; display: flex; justify-content: space-between; align-items: center; }
     .admin-header h1 { margin: 0; font-size: 1.3rem; font-weight: 600; }
-    .admin-header a { color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
-    .admin-header a:hover { text-decoration: underline; }
+    .admin-header a { color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.9rem; }
     .admin-body { padding: 32px; }
-    
     .login-box { text-align: center; padding: 60px 20px; }
     .login-box input { width: 100%; max-width: 300px; margin: 0 auto 16px; display: block; }
-    .login-error { color: #dc2626; font-size: 0.9rem; display: none; margin-top: 8px; }
-    
-    .status { padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-size: 0.95rem; font-weight: 500; }
+    .status { padding: 10px 14px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; }
     .status.ok { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
     .status.err { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
     .status.info { background: #e0f2fe; color: #075985; border: 1px solid #7dd3fc; }
-    
-    .data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .data-card { background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
-    .data-card h4 { margin: 0 0 12px 0; color: #1a5f2a; font-size: 1rem; display: flex; align-items: center; gap: 6px; }
-    .data-card p { margin: 6px 0; font-size: 0.95rem; color: #475569; }
-    .data-card .val { font-weight: 600; color: #111827; }
-    
-    .admin-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-    .btn-admin { background: #1a5f2a; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: 0.2s; }
-    .btn-admin:hover { background: #124a1f; transform: translateY(-1px); }
-    .btn-link { background: #4285f4; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; transition: 0.2s; }
-    .btn-link:hover { background: #3367d6; transform: translateY(-1px); }
-    .btn-logout { background: #64748b; }
-    .btn-logout:hover { background: #475569; }
-    
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 20px; }
+    .card { background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+    .card h3 { margin: 0 0 12px; color: #1a5f2a; font-size: 1.1rem; display: flex; align-items: center; gap: 6px; }
+    .price-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+    .price-form label { display: flex; flex-direction: column; font-size: 0.9rem; color: #475569; }
+    .price-form input { padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 500; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #f1f5f9; color: #334155; font-weight: 600; }
+    .status-select { padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; }
+    .btn { background: #1a5f2a; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: 0.2s; }
+    .btn:hover { background: #124a1f; transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-orange { background: #d97706; } .btn-orange:hover { background: #b45309; }
+    .btn-gray { background: #64748b; }
     .hidden { display: none !important; }
-    @media (max-width: 600px) {
-      .admin-wrapper { margin: 0; border-radius: 0; }
-      .admin-actions { flex-direction: column; }
-      .btn-admin, .btn-link, .btn-logout { width: 100%; text-align: center; }
-    }
+    @media (max-width: 700px) { .admin-wrapper { margin: 0; border-radius: 0; } .grid-2 { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -52,61 +43,66 @@
       <h1>⚙️ Панель управления</h1>
       <a href="index.html" target="_blank">↗ Открыть сайт</a>
     </header>
-
     <main class="admin-body">
-      <!-- Вход -->
       <div id="loginBox" class="login-box">
-        <h2 style="margin-bottom:24px; font-weight:600">🔐 Доступ к настройкам</h2>
-        <input type="password" id="adminPass" placeholder="Введите пароль" autocomplete="off">
-        <button class="btn-admin" id="loginBtn">Войти</button>
-        <p class="login-error" id="loginError">Неверный пароль</p>
+        <h2 style="margin-bottom:24px">🔐 Доступ</h2>
+        <input type="password" id="adminPass" placeholder="Пароль">
+        <button class="btn" id="loginBtn">Войти</button>
+        <p id="loginError" style="color:#dc2626;margin-top:10px;display:none">Неверный пароль</p>
       </div>
-
-      <!-- Дашборд -->
       <div id="dashboard" class="hidden">
-        <div id="cmsStatus" class="status info">Нажмите "Обновить" для загрузки данных</div>
+        <div id="globalStatus" class="status info">Загрузка...</div>
         
-        <div class="data-grid">
-          <div class="data-card">
-            <h4>📞 Контакты</h4>
-            <p>Телефон: <span class="val" id="adm-phone">—</span></p>
-            <p>WhatsApp: <span class="val" id="adm-wa">—</span></p>
-            <p>Email: <span class="val" id="adm-email">—</span></p>
-            <p>Адрес: <span class="val" id="adm-address">—</span></p>
+        <div class="grid-2">
+          <!-- Обзор -->
+          <div class="card">
+            <h3>📊 Текущие настройки</h3>
+            <div id="overview"></div>
           </div>
-          
-          <div class="data-card">
-            <h4>💰 Цены за рейс</h4>
-            <p>Песок: <span class="val" id="adm-pesok">—</span></p>
-            <p>Щебень: <span class="val" id="adm-sheben">—</span></p>
-            <p>Грунт: <span class="val" id="adm-grunt">—</span></p>
-            <p>Торф: <span class="val" id="adm-torf">—</span></p>
-            <p>Бетон: <span class="val" id="adm-beton">—</span></p>
-          </div>
-          
-          <div class="data-card">
-            <h4>🚚 Доставка</h4>
-            <p>База: <span class="val" id="adm-delivery">—</span> ₽</p>
-            <p>Шаг: <span class="val" id="adm-step">—</span> км</p>
-            <p>Радиус: <span class="val" id="adm-radius">—</span> км</p>
-          </div>
-          
-          <div class="data-card">
-            <h4>🎨 Дизайн</h4>
-            <p>Основной: <span class="val" id="adm-color1">—</span></p>
-            <p>Акцент: <span class="val" id="adm-color2">—</span></p>
+          <!-- Цены -->
+          <div class="card">
+            <h3>💰 Изменение цен</h3>
+            <form id="priceForm" class="price-form">
+              <label>Песок <input type="number" name="price_pesok"></label>
+              <label>Щебень <input type="number" name="price_sheben"></label>
+              <label>Грунт <input type="number" name="price_grunt"></label>
+              <label>Торф <input type="number" name="price_torf"></label>
+              <label>Бетон <input type="number" name="price_beton"></label>
+              <label>Доставка <input type="number" name="delivery_price"></label>
+              <label>Шаг (км) <input type="number" name="delivery_step"></label>
+              <label>Радиус <input type="number" name="delivery_radius"></label>
+            </form>
+            <button id="savePricesBtn" class="btn" style="margin-top:14px;width:100%">💾 Сохранить изменения</button>
           </div>
         </div>
 
-        <div class="admin-actions">
-          <button class="btn-admin" id="refreshBtn">🔄 Обновить данные</button>
-          <a id="sheetLink" href="#" target="_blank" class="btn-link">📊 Открыть таблицу</a>
-          <button class="btn-admin btn-logout" id="logoutBtn">🚪 Выйти</button>
+        <div class="card" style="margin-top:20px">
+          <h3>📋 Заявки</h3>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Время</th><th>Имя</th><th>Телефон</th><th>Материал</th><th>Сумма</th><th>Статус</th></tr></thead>
+              <tbody id="leadsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px">
+          <div>
+            <h3 style="margin:0">💾 Резервное копирование</h3>
+            <p style="margin:4px 0 0; font-size:0.9rem; color:#64748b">Авто: каждый Пн в 03:00. Хранится в Google Drive.</p>
+          </div>
+          <button id="backupBtn" class="btn btn-orange">🔄 Создать бэкап сейчас</button>
+        </div>
+        <div id="backupStatus" class="status hidden" style="margin-top:12px"></div>
+
+        <div style="margin-top:24px; display:flex; gap:12px; flex-wrap:wrap">
+          <button class="btn" onclick="loadAll()">🔄 Обновить всё</button>
+          <a id="sheetLink" href="#" target="_blank" class="btn" style="background:#4285f4;text-decoration:none">📊 Таблица</a>
+          <button class="btn btn-gray" onclick="logout()">🚪 Выйти</button>
         </div>
       </div>
     </main>
   </div>
-
   <script src="assets/js/admin.js"></script>
 </body>
 </html>

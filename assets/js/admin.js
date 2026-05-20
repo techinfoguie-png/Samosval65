@@ -1,157 +1,191 @@
-(function() {
-  'use strict';
-  
-  // 🔧 НАСТРОЙКИ
-  const CFG = {
+
     CMS_URL: 'https://script.google.com/macros/s/AKfycbzk4T_aLnTlEq-q5v4rGqFWtENTEvSvZ1wqOyKKMLBuh0HG6rwxkbYognua149x9Hze3Q/exec', // ← URL из Apps Script
     PASSWORD: 'admin123', // ← Пароль для входа
     SHEET_URL: 'https://docs.google.com/spreadsheets/d/17bbtzt_kGkVFlWZeVTP0yLvWFT0kies9qEdPTjm66NE/edit' // ← Ссылка на таблицу
+(function() {
+  'use strict';
+  console.log('🟢 admin.js v4 loaded');
+
+  // 🔧 1. КОНФИГ (запятые проверены!)
+  const CFG = {
+    CMS_URL: 'https://script.google.com/macros/s/AKfycbzk4T_aLnTlEq-q5v4rGqFWtENTEvSvZ1wqOyKKMLBuh0HG6rwxkbYognua149x9Hze3Q/exec', // ← URL из Apps Script
+    PASSWORD: 'admin123', // ← Пароль для входа
+    SHEET_URL: 'https://docs.google.com/spreadsheets/d/17bbtzt_kGkVFlWZeVTP0yLvWFT0kies9qEdPTjm66NE/edit',
+    DEBUG: false
   };
 
-  document.addEventListener('DOMContentLoaded', function() {
-    console.log('🟢 admin.js загружен. Режим отладки:', CFG.DEBUG);
+  // 🎯 2. DOM
+  const UI = {
+    loginBox: document.getElementById('loginBox'),
+    dashboard: document.getElementById('dashboard'),
+    pass: document.getElementById('adminPass'),
+    loginForm: document.getElementById('loginForm'),
+    loginError: document.getElementById('loginError'),
+    status: document.getElementById('globalStatus'),
+    savePricesBtn: document.getElementById('savePricesBtn'),
+    leadsBody: document.getElementById('leadsBody'),
+    backupBtn: document.getElementById('backupBtn'),
+    backupStatus: document.getElementById('backupStatus'),
+    overview: document.getElementById('overview'),
+    sheetLink: document.getElementById('sheetLink'),
+    priceForm: document.getElementById('priceForm')
+  };
 
-    const passInput = document.getElementById('adminPass');
-    const loginBtn = document.getElementById('loginBtn');
-    const errorMsg = document.getElementById('loginError');
-    const loginBox = document.getElementById('loginBox');
-    const dashboard = document.getElementById('dashboard');
-    const statusBox = document.getElementById('globalStatus');
-    const sheetLink = document.getElementById('sheetLink');
-    const priceForm = document.getElementById('priceForm');
+  if (!UI.loginBox) return;
+  UI.sheetLink.href = CFG.SHEET;
 
-    if (!passInput || !loginBtn) {
-      console.error('❌ Ошибка: Не найдены поля ввода. Проверьте, что admin.html загружен корректно.');
+  // 🔐 3. ВХОД (глобальная функция для HTML)
+  window.handleLogin = function(e) {
+    if (e) e.preventDefault();
+    const val = UI.pass.value.trim();
+    console.log('🔑 Введено:', val, '| Ожидалось:', CFG.PASS);
+    
+    if (CFG.DEBUG || val === CFG.PASS) {
+      sessionStorage.setItem('auth', '1');
+      UI.loginError.style.display = 'none';
+      UI.loginBox.classList.add('hidden');
+      UI.dashboard.classList.remove('hidden');
+      loadAll();
+    } else {
+      UI.loginError.style.display = 'block';
+      UI.pass.value = '';
+      UI.pass.focus();
+    }
+  };
+
+  // 🔄 4. ЗАГРУЗКА
+  async function loadAll() {
+    if (!UI.status) return;
+    UI.status.textContent = '🔄 Загрузка...';
+    UI.status.className = 'status info';
+    try {
+      const [cfgRes, leadsRes] = await Promise.all([
+        fetch(CFG.URL + '?mode=config'),
+        fetch(CFG.URL + '?mode=leads')
+      ]);
+      const config = cfgRes.ok ? await cfgRes.json() : {};
+      const leads = leadsRes.ok ? (await leadsRes.json()).leads || [] : [];
+      renderOverview(config);
+      fillForm(config);
+      renderLeads(leads);
+      UI.status.textContent = '✅ Обновлено: ' + new Date().toLocaleTimeString('ru-RU');
+      UI.status.className = 'status ok';
+    } catch (err) {
+      console.error('🌐 Error:', err);
+      UI.status.textContent = '⚠️ Ошибка сети: ' + err.message;
+      UI.status.className = 'status err';
+    }
+  }
+  window.loadAll = loadAll;
+
+  // 🎨 5. РЕНДЕР
+  function renderOverview(c) {
+    if (!UI.overview) return;
+    UI.overview.innerHTML = '<p>📞 ' + (c.phone||'—') + ' | ✉️ ' + (c.email||'—') + '</p>' +
+      '<p>📍 ' + (c.address||'—') + '</p>' +
+      '<p>🚛 Доставка: ' + (c.delivery_price||0) + '₽ / ' + (c.delivery_step||10) + ' км (до ' + (c.delivery_radius||150) + ' км)</p>';
+  }
+
+  function fillForm(c) {
+    if (!UI.priceForm) return;
+    ['price_pesok','price_sheben','price_grunt','price_torf','price_beton','delivery_price','delivery_step','delivery_radius'].forEach(function(k) {
+      var el = UI.priceForm.querySelector('[name="' + k + '"]');
+      if (el) el.value = c[k] !== undefined ? c[k] : '';
+    });
+  }
+
+  function renderLeads(leads) {
+    if (!UI.leadsBody) return;
+    if (!leads.length) {
+      UI.leadsBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#64748b">Пока нет заявок</td></tr>';
       return;
     }
+    UI.leadsBody.innerHTML = leads.map(function(l) {
+      return '<tr>' +
+        '<td>' + (l.Timestamp||'—') + '</td>' +
+        '<td>' + (l.Name||'—') + '</td>' +
+        '<td>' + (l.Phone||'—') + '</td>' +
+        '<td>' + (l.Material||'—') + '</td>' +
+        '<td>' + (l.Total_price ? l.Total_price + '₽' : '—') + '</td>' +
+        '<td><select class="status-select" data-row="' + l._row + '" onchange="window.updateStatus(this)">' +
+          '<option value="new"' + (l.Status==='new'?' selected':'') + '>new</option>' +
+          '<option value="called"' + (l.Status==='called'?' selected':'') + '>called</option>' +
+          '<option value="done"' + (l.Status==='done'?' selected':'') + '>done</option>' +
+          '<option value="cancel"' + (l.Status==='cancel'?' selected':'') + '>cancel</option>' +
+        '</select></td></tr>';
+    }).join('');
+  }
 
-    sheetLink.href = CFG.SHEET;
-
-    // 🔐 ЛОГИКА ВХОДА
-    function attemptLogin() {
-      const entered = passInput.value.trim();
-      console.log('🔑 Введено:', `"${entered}"`);
-      console.log('🔑 Ожидается:', `"${CFG.PASS}"`);
-      console.log('🔑 Совпадение:', entered === CFG.PASS);
-
-      if (CFG.DEBUG || entered === CFG.PASS) {
-        sessionStorage.setItem('auth', '1');
-        loginBox.classList.add('hidden');
-        dashboard.classList.remove('hidden');
-        errorMsg.style.display = 'none';
-        console.log('✅ Вход выполнен успешно');
-        loadAll();
-      } else {
-        errorMsg.style.display = 'block';
-        passInput.value = '';
-        passInput.focus();
-        console.warn('❌ Пароль неверный');
-      }
+  // 💾 6. ДЕЙСТВИЯ
+  async function savePrices() {
+    if (!UI.savePricesBtn || !UI.priceForm) return;
+    UI.savePricesBtn.disabled = true;
+    UI.savePricesBtn.textContent = '⏳ Сохранение...';
+    var data = new URLSearchParams({ action: 'update_config' });
+    Array.from(UI.priceForm.elements).forEach(function(el) {
+      if (el.name && el.value !== '') data.append(el.name, el.value);
+    });
+    try {
+      await fetch(CFG.URL, { method: 'POST', body: data });
+      UI.status.textContent = '💾 Сохранено!';
+      UI.status.className = 'status ok';
+      setTimeout(loadAll, 800);
+    } catch {
+      UI.status.textContent = '❌ Ошибка сохранения';
+      UI.status.className = 'status err';
+    } finally {
+      UI.savePricesBtn.disabled = false;
+      UI.savePricesBtn.textContent = '💾 Сохранить изменения';
     }
+  }
 
-    loginBtn.addEventListener('click', attemptLogin);
-    passInput.addEventListener('keydown', e => e.key === 'Enter' && attemptLogin());
-
-    // 🔄 АВТО-ВХОД
-    if (sessionStorage.getItem('auth') === '1') {
-      loginBox.classList.add('hidden');
-      dashboard.classList.remove('hidden');
-      loadAll();
-    }
-
-    // 📥 ЗАГРУЗКА ДАННЫХ
-    async function loadAll() {
-      if (!statusBox) return;
-      statusBox.textContent = '🔄 Загрузка...';
-      statusBox.className = 'status info';
-      try {
-        const [cfgRes, leadsRes] = await Promise.all([
-          fetch(`${CFG.URL}?mode=config`),
-          fetch(`${CFG.URL}?mode=leads`)
-        ]);
-        const config = cfgRes.ok ? await cfgRes.json() : {};
-        const leads = leadsRes.ok ? (await leadsRes.json()).leads || [] : [];
-        renderOverview(config);
-        fillForm(config);
-        renderLeads(leads);
-        statusBox.textContent = `✅ Обновлено: ${new Date().toLocaleTimeString('ru-RU')}`;
-        statusBox.className = 'status ok';
-      } catch (e) {
-        console.error('🌐 Ошибка загрузки:', e);
-        statusBox.textContent = `⚠️ Ошибка сети (${e.message}). Проверьте CMS_URL`;
-        statusBox.className = 'status err';
-      }
-    }
-    window.loadAll = loadAll;
-
-    function renderOverview(c) {
-      const el = document.getElementById('overview');
-      if (!el) return;
-      el.innerHTML = `<p>📞 ${c.phone||'—'} | ✉️ ${c.email||'—'}</p><p>📍 ${c.address||'—'}</p><p>🚛 Доставка: ${c.delivery_price||0}₽ / ${c.delivery_step||10} км (до ${c.delivery_radius||150} км)</p>`;
-    }
-
-    function fillForm(c) {
-      if (!priceForm) return;
-      ['price_pesok','price_sheben','price_grunt','price_torf','price_beton','delivery_price','delivery_step','delivery_radius'].forEach(k => {
-        const input = priceForm.querySelector(`[name="${k}"]`);
-        if (input) input.value = c[k] ?? '';
+  window.updateStatus = async function(select) {
+    select.disabled = true;
+    try {
+      await fetch(CFG.URL, {
+        method: 'POST',
+        body: new URLSearchParams({ action: 'update_lead_status', row: select.dataset.row, status: select.value })
       });
+      UI.status.textContent = '📝 Заявка #' + select.dataset.row + ' → ' + select.value;
+      UI.status.className = 'status ok';
+    } catch {
+      UI.status.textContent = '❌ Ошибка обновления';
+      UI.status.className = 'status err';
+    } finally {
+      select.disabled = false;
     }
+  };
 
-    function renderLeads(leads) {
-      const tbody = document.getElementById('leadsBody');
-      if (!tbody) return;
-      tbody.innerHTML = leads.length === 0 
-        ? '<tr><td colspan="6" style="text-align:center;padding:20px;color:#64748b">Пока нет заявок</td></tr>'
-        : leads.map(l => `<tr>
-            <td>${l.Timestamp||'—'}</td><td>${l.Name||'—'}</td><td>${l.Phone||'—'}</td>
-            <td>${l.Material||'—'}</td><td>${l.Total_price?l.Total_price+'₽':'—'}</td>
-            <td><select class="status-select" data-row="${l._row}" onchange="window.updateStatus(this)">
-              <option value="new" ${l.Status==='new'?'selected':''}>new</option>
-              <option value="called" ${l.Status==='called'?'selected':''}>called</option>
-              <option value="done" ${l.Status==='done'?'selected':''}>done</option>
-              <option value="cancel" ${l.Status==='cancel'?'selected':''}>cancel</option>
-            </select></td></tr>`).join('');
+  async function createBackup() {
+    if (!UI.backupBtn) return;
+    UI.backupBtn.disabled = true;
+    UI.backupStatus.className = 'status info';
+    UI.backupStatus.textContent = '⏳ Создаю копию...';
+    UI.backupStatus.classList.remove('hidden');
+    try {
+      await fetch(CFG.URL, { method: 'POST', body: new URLSearchParams({ action: 'backup' }) });
+      UI.backupStatus.className = 'status ok';
+      UI.backupStatus.textContent = '✅ Бэкап создан!';
+    } catch {
+      UI.backupStatus.className = 'status err';
+      UI.backupStatus.textContent = '❌ Ошибка бэкапа';
+    } finally {
+      UI.backupBtn.disabled = false;
     }
+  }
 
-    async function savePrices() {
-      const btn = document.getElementById('savePricesBtn');
-      if (!btn || !priceForm) return;
-      btn.disabled = true; btn.textContent = '⏳ Сохранение...';
-      const data = new URLSearchParams({ action: 'update_config' });
-      Array.from(priceForm.elements).forEach(el => { if (el.name && el.value !== '') data.append(el.name, el.value); });
-      try {
-        await fetch(CFG.URL, { method: 'POST', body: data });
-        statusBox.textContent = '💾 Сохранено! Обновляю...'; statusBox.className = 'status ok';
-        setTimeout(loadAll, 800);
-      } catch { statusBox.textContent = '❌ Ошибка сохранения'; statusBox.className = 'status err'; }
-      finally { btn.disabled = false; btn.textContent = '💾 Сохранить изменения'; }
-    }
-    document.getElementById('savePricesBtn')?.addEventListener('click', savePrices);
+  // 🔗 7. СОБЫТИЯ
+  if (UI.loginForm) UI.loginForm.addEventListener('submit', window.handleLogin);
+  if (UI.savePricesBtn) UI.savePricesBtn.addEventListener('click', savePrices);
+  if (UI.backupBtn) UI.backupBtn.addEventListener('click', createBackup);
 
-    async function updateStatus(select) {
-      select.disabled = true;
-      try {
-        await fetch(CFG.URL, { method: 'POST', body: new URLSearchParams({ action: 'update_lead_status', row: select.dataset.row, status: select.value }) });
-        statusBox.textContent = `📝 Заявка #${select.dataset.row} → ${select.value}`; statusBox.className = 'status ok';
-      } catch { statusBox.textContent = '❌ Не удалось обновить'; statusBox.className = 'status err'; }
-      finally { select.disabled = false; }
-    }
-    window.updateStatus = updateStatus;
+  // 🚪 ВЫХОД
+  window.logout = function() { sessionStorage.removeItem('auth'); location.reload(); };
 
-    async function createBackup() {
-      const btn = document.getElementById('backupBtn');
-      const st = document.getElementById('backupStatus');
-      if (!btn || !st) return;
-      btn.disabled = true; st.className = 'status info'; st.textContent = '⏳ Создаю копию...'; st.classList.remove('hidden');
-      try {
-        await fetch(CFG.URL, { method: 'POST', body: new URLSearchParams({ action: 'backup' }) });
-        st.className = 'status ok'; st.textContent = '✅ Бэкап создан!';
-      } catch { st.className = 'status err'; st.textContent = '❌ Ошибка бэкапа.'; }
-      finally { btn.disabled = false; }
-    }
-    document.getElementById('backupBtn')?.addEventListener('click', createBackup);
-
-    window.logout = () => { sessionStorage.removeItem('auth'); location.reload(); };
-  });
+  // 🚀 АВТО-ВХОД
+  if (sessionStorage.getItem('auth') === '1') {
+    UI.loginBox.classList.add('hidden');
+    UI.dashboard.classList.remove('hidden');
+    loadAll();
+  }
 })();

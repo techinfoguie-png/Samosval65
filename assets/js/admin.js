@@ -1,4 +1,8 @@
 (function() {
+  'use strict';
+  
+  console.log('🟢 admin.js загружен');
+  
     const CONFIG = {
     CMS_URL: 'https://script.google.com/macros/s/AKfycbzk4T_aLnTlEq-q5v4rGqFWtENTEvSvZ1wqOyKKMLBuh0HG6rwxkbYognua149x9Hze3Q/exec', // ← URL из Apps Script
     PASSWORD: 'Samosval65!@#', // ← Пароль для входа

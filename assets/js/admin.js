@@ -1,139 +1,149 @@
-// assets/js/admin.js
-(function () {
-  'use strict';
-
-  // 🔧 НАСТРОЙКИ (замените на свои)
-  const CONFIG = {
+(function() {
+    const CONFIG = {
     CMS_URL: 'https://script.google.com/macros/s/AKfycbzk4T_aLnTlEq-q5v4rGqFWtENTEvSvZ1wqOyKKMLBuh0HG6rwxkbYognua149x9Hze3Q/exec', // ← URL из Apps Script
     PASSWORD: 'Samosval65!@#', // ← Пароль для входа
     SHEET_URL: 'https://docs.google.com/spreadsheets/d/17bbtzt_kGkVFlWZeVTP0yLvWFT0kies9qEdPTjm66NE/edit' // ← Ссылка на таблицу
   };
 
-  // 🎯 DOM-элементы
   const UI = {
     loginBox: document.getElementById('loginBox'),
     dashboard: document.getElementById('dashboard'),
-    passInput: document.getElementById('adminPass'),
+    pass: document.getElementById('adminPass'),
     loginBtn: document.getElementById('loginBtn'),
-    loginError: document.getElementById('loginError'),
-    statusBox: document.getElementById('cmsStatus'),
-    refreshBtn: document.getElementById('refreshBtn'),
+    err: document.getElementById('loginError'),
+    status: document.getElementById('globalStatus'),
+    savePricesBtn: document.getElementById('savePricesBtn'),
+    leadsBody: document.getElementById('leadsBody'),
+    backupBtn: document.getElementById('backupBtn'),
+    backupStatus: document.getElementById('backupStatus'),
+    overview: document.getElementById('overview'),
     sheetLink: document.getElementById('sheetLink'),
-    logoutBtn: document.getElementById('logoutBtn'),
-    fields: {
-      phone: document.getElementById('adm-phone'),
-      wa: document.getElementById('adm-wa'),
-      email: document.getElementById('adm-email'),
-      address: document.getElementById('adm-address'),
-      pesok: document.getElementById('adm-pesok'),
-      sheben: document.getElementById('adm-sheben'),
-      grunt: document.getElementById('adm-grunt'),
-      torf: document.getElementById('adm-torf'),
-      beton: document.getElementById('adm-beton'),
-      delivery: document.getElementById('adm-delivery'),
-      step: document.getElementById('adm-step'),
-      radius: document.getElementById('adm-radius'),
-      color1: document.getElementById('adm-color1'),
-      color2: document.getElementById('adm-color2')
-    }
+    form: document.getElementById('priceForm')
   };
 
-  // 🚀 Инициализация
+  let configData = {};
+
   function init() {
-    UI.sheetLink.href = CONFIG.SHEET_URL;
-    
-    // Проверяем сессию
-    if (sessionStorage.getItem('admin_auth') === 'true') {
-      showDashboard();
-      loadData();
-    }
-    
-    bindEvents();
+    UI.sheetLink.href = CFG.SHEET;
+    if (sessionStorage.getItem('auth') === '1') { showPanel(); loadAll(); }
+    UI.loginBtn.onclick = login;
+    UI.pass.onkeydown = e => e.key === 'Enter' && login();
+    UI.savePricesBtn.onclick = savePrices;
+    UI.backupBtn.onclick = createBackup;
   }
 
-  // 🎛️ Привязка событий
-  function bindEvents() {
-    UI.loginBtn.addEventListener('click', handleLogin);
-    UI.passInput.addEventListener('keypress', e => e.key === 'Enter' && handleLogin());
-    UI.refreshBtn.addEventListener('click', loadData);
-    UI.logoutBtn.addEventListener('click', handleLogout);
+  function login() {
+    if (UI.pass.value.trim() === CFG.PASS) {
+      sessionStorage.setItem('auth', '1');
+      UI.err.style.display = 'none';
+      showPanel();
+      loadAll();
+    } else UI.err.style.display = 'block';
   }
 
-  // 🔐 Вход
-  function handleLogin() {
-    if (UI.passInput.value.trim() === CONFIG.PASSWORD) {
-      sessionStorage.setItem('admin_auth', 'true');
-      UI.loginError.style.display = 'none';
-      showDashboard();
-      loadData();
-    } else {
-      UI.loginError.style.display = 'block';
-      UI.passInput.value = '';
-      UI.passInput.focus();
-    }
-  }
+  function showPanel() { UI.loginBox.classList.add('hidden'); UI.dashboard.classList.remove('hidden'); }
+  window.logout = () => { sessionStorage.removeItem('auth'); location.reload(); };
 
-  // 🚪 Выход
-  function handleLogout() {
-    sessionStorage.removeItem('admin_auth');
-    location.reload();
-  }
-
-  // 📊 Показать панель
-  function showDashboard() {
-    UI.loginBox.classList.add('hidden');
-    UI.dashboard.classList.remove('hidden');
-  }
-
-  // 📥 Загрузка данных
-  async function loadData() {
-    showStatus('🔄 Загрузка...', 'info');
+  async function loadAll() {
+    setStatus('🔄 Загрузка...', 'info');
     try {
-      const res = await fetch(CONFIG.CMS_URL, { cache: 'no-store' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      renderData(data);
-      showStatus(`✅ Обновлено: ${new Date().toLocaleTimeString('ru-RU')}`, 'ok');
-    } catch (err) {
-      console.error('CMS load error:', err);
-      showStatus(`❌ Ошибка: ${err.message}. Проверьте URL и права доступа в Apps Script.`, 'err');
+      const [cfgRes, leadsRes] = await Promise.all([
+        fetch(`${CFG.URL}?mode=config`),
+        fetch(`${CFG.URL}?mode=leads`)
+      ]);
+      configData = await cfgRes.json();
+      const leads = await leadsRes.json();
+      renderOverview(configData);
+      fillForm(configData);
+      renderLeads(leads.leads || []);
+      setStatus(`✅ Обновлено: ${new Date().toLocaleTimeString('ru-RU')}`, 'ok');
+    } catch (e) {
+      setStatus(`❌ Ошибка сети. Проверьте URL и права доступа.`, 'err');
     }
   }
+  window.loadAll = loadAll;
 
-  // 🎨 Рендер данных
-  function renderData(c) {
-    // Контакты
-    UI.fields.phone.textContent = c.phone || '—';
-    UI.fields.wa.textContent = c.whatsapp_number ? `+${c.whatsapp_number}` : '—';
-    UI.fields.email.textContent = c.email || '—';
-    UI.fields.address.textContent = c.address || '—';
+  function setStatus(msg, type) { UI.status.textContent = msg; UI.status.className = `status ${type}`; }
 
-    // Цены
-    ['pesok', 'sheben', 'grunt', 'torf', 'beton'].forEach(k => {
-      const val = c[`price_${k}`];
-      UI.fields[k].textContent = val != null ? `${Number(val).toLocaleString('ru-RU')} ₽` : '—';
+  function renderOverview(c) {
+    UI.overview.innerHTML = `
+      <p>📞 ${c.phone || '—'} | ✉️ ${c.email || '—'}</p>
+      <p>📍 ${c.address || '—'}</p>
+      <p>🎨 Цвета: <span style="color:${c.color_primary};font-weight:bold">${c.color_primary}</span> / ${c.color_accent}</p>
+      <p>🚛 Доставка: ${c.delivery_price}₽ за каждые ${c.delivery_step} км (до ${c.delivery_radius} км)</p>
+    `;
+  }
+
+  function fillForm(c) {
+    ['price_pesok','price_sheben','price_grunt','price_torf','price_beton','delivery_price','delivery_step','delivery_radius'].forEach(k => {
+      if (UI.form[k]) UI.form[k].value = c[k] ?? '';
     });
-
-    // Доставка
-    UI.fields.delivery.textContent = c.delivery_price != null ? `${c.delivery_price} ₽` : '—';
-    UI.fields.step.textContent = c.delivery_step != null ? `${c.delivery_step} км` : '—';
-    UI.fields.radius.textContent = c.delivery_radius != null ? `${c.delivery_radius} км` : '—';
-
-    // Дизайн
-    UI.fields.color1.textContent = c.color_primary || '—';
-    UI.fields.color2.textContent = c.color_accent || '—';
   }
 
-  // 💬 Статус-бар
-  function showStatus(msg, type) {
-    UI.statusBox.textContent = msg;
-    UI.statusBox.className = `status ${type}`;
+  async function savePrices() {
+    UI.savePricesBtn.disabled = true;
+    UI.savePricesBtn.textContent = 'Сохранение...';
+    const data = new URLSearchParams();
+    data.append('action', 'update_config');
+    Array.from(UI.form.elements).forEach(el => {
+      if (el.name && el.value !== '') data.append(el.name, el.value);
+    });
+    try {
+      await fetch(CFG.URL, { method: 'POST', body: data });
+      setStatus('💾 Цены успешно обновлены!', 'ok');
+      loadAll(); // Перезагрузить кэш
+    } catch { setStatus('❌ Ошибка сохранения', 'err'); }
+    finally { UI.savePricesBtn.disabled = false; UI.savePricesBtn.textContent = '💾 Сохранить изменения'; }
   }
 
-  // 🟢 Запуск
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
+  function renderLeads(leads) {
+    UI.leadsBody.innerHTML = leads.map(l => `
+      <tr>
+        <td>${l.Timestamp || '—'}</td>
+        <td>${l.Name || '—'}</td>
+        <td>${l.Phone || '—'}</td>
+        <td>${l.Material || '—'}</td>
+        <td>${l.Total_price ? l.Total_price + '₽' : '—'}</td>
+        <td>
+          <select class="status-select" data-row="${l._row}" onchange="updateStatus(this)">
+            <option ${l.Status==='new'?'selected':''}>new</option>
+            <option ${l.Status==='called'?'selected':''}>called</option>
+            <option ${l.Status==='done'?'selected':''}>done</option>
+            <option ${l.Status==='cancel'?'selected':''}>cancel</option>
+          </select>
+        </td>
+      </tr>
+    `).join('');
   }
+
+  async function updateStatus(select) {
+    const row = select.dataset.row;
+    const status = select.value;
+    select.disabled = true;
+    try {
+      await fetch(CFG.URL, {
+        method: 'POST',
+        body: new URLSearchParams({ action: 'update_lead_status', row, status })
+      });
+      setStatus(`📝 Заявка #${row} → ${status}`, 'ok');
+    } catch { setStatus('❌ Не удалось обновить статус', 'err'); }
+    finally { select.disabled = false; }
+  }
+  window.updateStatus = updateStatus;
+
+  async function createBackup() {
+    UI.backupBtn.disabled = true;
+    UI.backupStatus.className = 'status info';
+    UI.backupStatus.textContent = '⏳ Создаю копию в Drive...';
+    UI.backupStatus.classList.remove('hidden');
+    try {
+      await fetch(CFG.URL, { method: 'POST', body: new URLSearchParams({ action: 'backup' }) });
+      UI.backupStatus.className = 'status ok';
+      UI.backupStatus.textContent = '✅ Бэкап успешно создан! Проверьте Google Drive.';
+    } catch { UI.backupStatus.className = 'status err'; UI.backupStatus.textContent = '❌ Ошибка создания бэкапа.'; }
+    finally { UI.backupBtn.disabled = false; }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();

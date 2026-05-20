@@ -46,14 +46,19 @@
       <a href="index.html" target="_blank">↗ Открыть сайт</a>
     </header>
     <main class="admin-body">
+         <!-- Вставьте ВНУТРЬ <main class="admin-body"> -->
       <div id="loginBox" class="login-box">
-        <h2>🔐 Доступ</h2>
+        <h2 style="margin-bottom:24px">🔐 Доступ</h2>
+  
+        <!-- Форма с правильной привязкой -->
         <form id="loginForm" onsubmit="event.preventDefault(); handleLogin();">
-        <input type="password" id="adminPass" placeholder="Пароль" autocomplete="current-password">
-        <button type="submit" class="btn" id="loginBtn">Войти</button>
+          <input type="password" id="adminPass" placeholder="Пароль" autocomplete="current-password" style="width:100%;max-width:300px;margin:0 auto 16px;display:block;padding:12px;border:1px solid #cbd5e1;border-radius:8px">
+          <button type="submit" class="btn" id="loginBtn" style="width:auto;padding:12px 32px">Войти</button>
         </form>
-        <p id="loginError" style="color:#dc2626;margin-top:10px;display:none">Неверный пароль</p>
+  
+        <p id="loginError" style="color:#dc2626;margin-top:10px;display:none;font-size:0.9rem">❌ Неверный пароль</p>
       </div>
+      
       <div id="dashboard" class="hidden">
         <div id="globalStatus" class="status info">Загрузка...</div>
         
